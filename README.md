@@ -7,3 +7,7 @@ https://reactstrap.github.io/?path=/docs/home-installation--page
 
 https://www.npmjs.com/package/@elbrus/create-config
 npm init @elbrus/config@latest
+
+
+Связи
+https://github.com/Elbrus-Bootcamp/sequelize-relations-example
