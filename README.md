@@ -104,4 +104,7 @@ async function sendData() {
 
 sendData();
 
+======TYPE SCRIPT=====
 
+Шаблон Vite: npx degit Elbrus-Bootcamp/vite-react-ts dirname
+Шаблон Create-React-App: npx create-react-app dirname --template elbrus-ts
