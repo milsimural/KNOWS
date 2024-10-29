@@ -55,3 +55,22 @@ Post.findAll({ include: Tag }) - Что выведет такой запрос?
 Запрос Post.findAll({ include: Tag }) вернёт все посты из таблицы Post вместе с присоединённой информацией о связанных тегах из таблицы Tag. По сути, он находит все записи в таблице Post и добавляет к каждой найденной записи массив тегов, которые связаны с этим постом через промежуточную таблицу Posts_tag.
 
 Результат будет массив объектов, где каждый объект представляет пост, и у него будет дополнительное свойство (обычно Tags), содержащее массив связанных с ним тегов. Это позволяет вам легко увидеть, какие теги прикреплены к каждому посту.
+
+// Model Post
+static associate(models) {
+this.hasMany(models.Posts_tag, { foreignKey: 'post_id' })
+}
+// Model Tag
+static associate(models) {
+this.hasMany(models.Posts_tag, { foreignKey: 'tag_id' })
+}
+// Model Posts_tag
+static associate(models) {
+this.belongsTo(models.Post, { foreignKey: 'post_id' })
+this.belongsTo(models.Tag, { foreignKey: 'tag_id' })
+}
+
+Posts_tag.findAll({ include: Post })
+Posts_tag.findAll({ include: Tag })
+Post.findAll({ include: Posts_tag })
+Tag.findAll({ include: Posts_tag })
