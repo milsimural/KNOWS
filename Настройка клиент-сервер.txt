@@ -1,0 +1,231 @@
+В любой непонятной ситуации: https://www.youtube.com/watch?v=jrfC7EpOt34
+
+0) инициализация проекта: npm init @elbrus/config@latest
+1) установить sequelize: npm install sequelize pg pg-hstore
+2) установить sequelize CLI: npm i -D sequelize-cli 
+3) создать файл с настройками .sequelizerc
+///
+const path = require('path');
+
+module.exports = {
+  config: path.resolve('db', 'database.js'),
+  'models-path': path.resolve('db', 'models'),
+  'seeders-path': path.resolve('db', 'seeders'),
+  'migrations-path': path.resolve('db', 'migrations'),
+}; 
+///
+4) проинициализировать базу данных: npx sequelize-cli init
+4.1) установить npm install dotenv
+4.2) в файл sequelize вставить require('dotenv').config()
+4.3) создать файлы .env .env.example
+4.4) В них сразу создать строчки:
+///
+DATABASE_URL="postgresql://postgres.jwdozlbxfzqnietgexrt:54691FTPa1234FAX12AFAf@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"
+ACCESS_TOKEN_SECRET="1234qwertASDFG###777errorVERYjoke"
+REFRESH_TOKEN_SECRET="1234qwertASDFG###777errorVERYjoke"
+///
+5) заполнить файл database.js своими настройками
+///
+{
+  "development": {
+    "use_env_variable": "DATABASE_URL"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "database_production",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
+///
+6) создать базу данных: npx sequelize-cli db:create 
+7) создать таблицы командой:
+npx sequelize model:generate --name Group --attributes title:string
+и прописать связи, ассоциации
+///
+allowNull: false,
+defaultValue: 0,
+defaultValue: Sequelize.NOW,
+unique: true,
+references: {
+          model: 'Clubs',
+          key: 'id',
+	},
+///
+8) накатить миграции: npx sequelize-cli db:migrate
+9) откатить миграции, если нет связей: npx sequelize-cli db:migrate:undo:all
+10) заполнить связи в модели и миграциях
+11) накатить миграции
+12) создать функцию заполнения данных: npx sequelize seed:generate --name init-seeds
+
+++++++++
+createdAt
+defaultValue: Sequelize.fn('NOW')
++++++++
+
+"db": "npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all"
+
+13) npm i express morgan dotenv
+14) Создадим: папки src в ней app.js server.js и папку src/routes
+15) app.js
+///
+const express = require('express');
+const morgan = require('morgan');
+
+const app = express();
+
+app.use((morgan('dev')));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/api/sample', require('./routes/sampleRouter'));
+
+module.exports = app;
+///
+16) server.js
+///
+const app = require('./app');
+require('dotenv').config();
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});
+///
+17) Пример sampleRouter.js
+///
+const express = require('express');
+// const { SampleModel } = require('../../db/models')
+const sampleRouter = express.Router();
+
+// sampleRouter.get('/', async (req, res) => {
+//   const sampleData = await SampleModel.findAll();
+//   res.send(sampleData);
+// });
+
+module.exports = sampleRouter;
+///
+18) Ставим витька в папке client: npm create vite@latest
+19) Ставим пакеты npm i
+20) Прописываем прокси для веб-сервера в vite.config.js:
+///
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/api': 'http://localhost:3000' // Все запросы которые начинабтся с /api будут перенаправлены на localhost:3000
+    }
+  }
+})
+///
+21) Ставим css фреймворк по вкусу:
+https://react-bootstrap.github.io/docs/getting-started/introduction
+https://mui.com/
+
+Реакт:
+npm i bootstrap@5.3.3 (Если будем использовать html css компоненты)
+npm install react-bootstrap bootstrap (Если будем использовать react готовые компоненты)
+Импортируем в main.js (так как это точка входа) файлы бутстраппа
+
+Материал:
+npm install @mui/material @emotion/react @emotion/styled
+npm install @fontsource/roboto
+22) Создаем папку src/components в ней pages и ui
+32) Создаем: 
+components/Layout.jsx
+pages/MainPage.jsx
+ui/NavBar.jsx
+33) Ставим npm install react-router-dom
+34) Меняю Layout вот так:
+///
+import React from 'react'
+import { Outlet } from 'react-router-dom'
+import NavBar from './NavBar'
+
+export default function Layout() {
+  return (
+    <>
+    <NavBar />
+    <Outlet />
+    </>
+  )
+}
+///
+35) Настраиваем роуты в App.js
+///
+function App() {
+  const routes = [
+    {
+      element: <Layout />,
+      children: [
+        {
+          path: "/",
+          element: <MainPage />,
+        },
+      ],
+    },
+  ];
+  const router = createBrowserRouter(routes);
+
+  return <RouterProvider router={router} />;
+}
+///
+36) Настраиваем axiosInstance.js в src
+///
+import axios from "axios";
+
+const axiosInstance = axios.create({
+  baseURL: "/api",
+});
+
+let accessToken = "";
+
+function setAccessToken(newToken) {
+  accessToken = newToken;
+}
+
+axiosInstance.interceptors.request.use((config) => {
+  if (!config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
+});
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const prevRequest = error.config;
+    if (error.response.status === 403 && !prevRequest.sent) {
+      const response = await axios("/api/tokens/refresh");
+      accessToken = response.data.accessToken;
+      prevRequest.sent = true;
+      prevRequest.headers.Authorization = `Bearer ${accessToken}`;
+      return axiosInstance(prevRequest);
+    }
+    return Promise.reject(error);
+  }
+);
+
+export { setAccessToken };
+
+export default axiosInstance;
+///
+37) Устанавливаем npm install axios
+38) npm i bcrypt cookie-parser jsonwebtoken - на серваке
+39) npm i cookie-parser тоже на сервере
+40) Добавляем в app.js - 
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
